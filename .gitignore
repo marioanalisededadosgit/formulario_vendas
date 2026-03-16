@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.env
+venv/
+.env
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Credenciais (NUNCA subir isso!)
+credentials.json
+token.json
+*.key
