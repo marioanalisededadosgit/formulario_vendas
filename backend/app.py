@@ -1,13 +1,14 @@
-# from flask import Flask, request, jsonify
+# from flask import Flask, request, jsonify, send_from_directory
 # from flask_cors import CORS
 # import gspread
 # from google.oauth2.service_account import Credentials
 # from dotenv import load_dotenv
 # import os
+# from datetime import datetime
 
 # load_dotenv()
 
-# app = Flask(__name__)
+# app = Flask(__name__, static_folder='../frontend', static_url_path='')
 # CORS(app)
 
 # SCOPES = [
@@ -22,13 +23,20 @@
 #     return spreadsheet
 
 # def proxima_linha_vazia(sheet_vendas):
-#     # Pega todos os valores da coluna A (ID_VENDA)
 #     coluna_id = sheet_vendas.col_values(1)
-#     # Percorre de baixo para cima até achar o último ID preenchido
 #     for i in range(len(coluna_id) - 1, 0, -1):
 #         if coluna_id[i].strip() != '':
-#             return i + 2  # linha seguinte à última com dado
-#     return 2  # se não achou nada, começa na linha 2
+#             return i + 2
+#     return 2
+
+# # Rotas para servir os HTMLs
+# @app.route('/')
+# def index():
+#     return app.send_static_file('index.html')
+
+# @app.route('/clientes')
+# def clientes():
+#     return app.send_static_file('clientes.html')
 
 # # Rota para buscar produtos
 # @app.route('/produtos', methods=['GET'])
@@ -49,6 +57,16 @@
 #     except Exception as e:
 #         return jsonify({'sucesso': False, 'erro': str(e)}), 500
 
+# # Rota para buscar o menu
+# @app.route('/menu')
+# def menu():
+#     return app.send_static_file('menu.html')
+
+# @app.route('/vendas')
+# def vendas():
+#     return app.send_static_file('index.html')
+
+
 # # Rota para registrar venda
 # @app.route('/venda', methods=['POST'])
 # def registrar_venda():
@@ -57,14 +75,11 @@
 #         spreadsheet = conectar_sheets()
 #         sheet_vendas = spreadsheet.worksheet('VENDAS')
 
-#         # Calcula valores
 #         quantidade = float(dados['quantidade'])
 #         preco_unitario = float(dados['preco_unitario'])
 
-#         # Encontra a próxima linha vazia baseado na coluna ID_VENDA
 #         proxima = proxima_linha_vazia(sheet_vendas)
 
-#         # Escreve apenas nas colunas sem fórmula
 #         sheet_vendas.batch_update([
 #             {'range': f'C{proxima}', 'values': [[dados['produto']]]},
 #             {'range': f'D{proxima}', 'values': [[quantidade]]},
@@ -79,7 +94,7 @@
 #     except Exception as e:
 #         return jsonify({'sucesso': False, 'erro': str(e)}), 500
 
-# # Rota para cadastrar cliente     add 18/03/2026 Mário
+# # Rota para cadastrar cliente
 # @app.route('/cliente', methods=['POST'])
 # def cadastrar_cliente():
 #     try:
@@ -87,11 +102,9 @@
 #         spreadsheet = conectar_sheets()
 #         sheet_clientes = spreadsheet.worksheet('CLIENTE')
 
-#         # Encontra próxima linha vazia pela coluna A (ID_CLIENTE)
-#         coluna_nome = sheet_clientes.col_values(1)
+#         coluna_nome = sheet_clientes.col_values(2)
 #         proxima = len([x for x in coluna_nome if x.strip() != '']) + 1
 
-#         from datetime import datetime
 #         data_cadastro = datetime.now().strftime('%Y-%m-%d')
 
 #         sheet_clientes.batch_update([
@@ -111,6 +124,7 @@
 
 # if __name__ == '__main__':
 #     app.run(debug=True, port=5000)
+
 #---------------------------------------------------------------------------------
 
 from flask import Flask, request, jsonify, send_from_directory
@@ -147,6 +161,14 @@ def proxima_linha_vazia(sheet_vendas):
 # Rotas para servir os HTMLs
 @app.route('/')
 def index():
+    return app.send_static_file('menu.html')
+
+@app.route('/menu')
+def menu():
+    return app.send_static_file('menu.html')
+
+@app.route('/vendas')
+def vendas():
     return app.send_static_file('index.html')
 
 @app.route('/clientes')
