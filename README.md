@@ -206,3 +206,6 @@ Este projeto é de código fechado.
 ## 📞 Suporte
 
 Para dúvidas ou problemas, entre em contato com o desenvolvedor.
+
+
+## Agora vamos melhorar o visual do trabalho,  a cliente é uma biologa, que gosta de borboletas e bichinhos, vc teria uma ideia boa para me mostrar
