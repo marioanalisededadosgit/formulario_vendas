@@ -59,7 +59,15 @@
 # def clientes():
 #     return app.send_static_file('clientes.html')
 
-# # Rota para buscar produtos
+# @app.route('/cadastro-produto')
+# def produtos_page():
+#     return app.send_static_file('produtos.html')
+
+# @app.route('/cadastro-estoque')
+# def estoque_page():
+#     return app.send_static_file('estoque.html')
+
+# # Rota API para buscar produtos
 # @app.route('/produtos', methods=['GET'])
 # def get_produtos():
 #     try:
@@ -91,7 +99,6 @@
 
 #         proxima = proxima_linha_vazia(sheet_vendas)
 
-#         # Registra a venda
 #         sheet_vendas.batch_update([
 #             {'range': f'C{proxima}', 'values': [[dados['produto']]]},
 #             {'range': f'D{proxima}', 'values': [[quantidade]]},
@@ -102,7 +109,6 @@
 #             {'range': f'K{proxima}', 'values': [[dados['condicao']]]}
 #         ])
 
-#         # Registra saída no estoque automaticamente com id_produto
 #         registrar_movimentacao_estoque(
 #             spreadsheet,
 #             dados['id_produto'],
@@ -140,6 +146,40 @@
 #         ])
 
 #         return jsonify({'sucesso': True, 'mensagem': 'Cliente cadastrado com sucesso!'})
+#     except Exception as e:
+#         return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
+# # Rota para cadastrar produto
+# @app.route('/produto', methods=['POST'])
+# def cadastrar_produto():
+#     try:
+#         dados = request.json
+#         spreadsheet = conectar_sheets()
+#         sheet_produto = spreadsheet.worksheet('PRODUTO')
+
+#         coluna_nome = sheet_produto.col_values(2)
+#         proxima = len([x for x in coluna_nome if x.strip() != '']) + 1
+
+#         sheet_produto.batch_update([
+#             {'range': f'B{proxima}', 'values': [[dados['produto']]]},
+#             {'range': f'C{proxima}', 'values': [[dados['preco_compra']]]},
+#             {'range': f'D{proxima}', 'values': [[dados['preco_venda']]]}
+#         ])
+
+#         import time
+#         time.sleep(1)
+#         id_produto = sheet_produto.cell(proxima, 1).value
+
+#         if float(dados.get('quantidade_inicial', 0)) > 0:
+#             registrar_movimentacao_estoque(
+#                 spreadsheet,
+#                 id_produto,
+#                 dados['produto'],
+#                 float(dados['quantidade_inicial']),
+#                 'ENTRADA'
+#             )
+
+#         return jsonify({'sucesso': True, 'mensagem': 'Produto cadastrado com sucesso!'})
 #     except Exception as e:
 #         return jsonify({'sucesso': False, 'erro': str(e)}), 500
 
@@ -197,7 +237,7 @@
 
 # if __name__ == '__main__':
 #     app.run(debug=True, port=5000)
-# ------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -284,6 +324,26 @@ def get_produtos():
             for p in dados if p['PRODUTO']
         ]
         return jsonify({'sucesso': True, 'produtos': produtos})
+    except Exception as e:
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
+# Rota API para buscar clientes
+@app.route('/api/clientes', methods=['GET'])
+def get_clientes():
+    try:
+        spreadsheet = conectar_sheets()
+        sheet = spreadsheet.worksheet('CLIENTE')
+        dados = sheet.get_all_records()
+        clientes = [
+            {
+                'id': c['ID_CLIENTE'],
+                'nome': c['NOME_CLIENTE'],
+                'telefone': c['TELEFONE'],
+                'tipo': c['TIPO_CLIENTE']
+            }
+            for c in dados if c['NOME_CLIENTE']
+        ]
+        return jsonify({'sucesso': True, 'clientes': clientes})
     except Exception as e:
         return jsonify({'sucesso': False, 'erro': str(e)}), 500
 

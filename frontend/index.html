@@ -32,303 +32,6 @@
         h1 {
             text-align: center;
             color: #333;
-            margin-bottom: 25px;
-            font-size: 22px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        input:focus,
-        select:focus {
-            outline: none;
-            border-color: #4CAF50;
-        }
-
-        .row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .preco-info {
-            background: #f8f9fa;
-            padding: 8px 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background: #45a049;
-        }
-
-        button:disabled {
-            background: #aaa;
-            cursor: not-allowed;
-        }
-
-        .mensagem {
-            text-align: center;
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 6px;
-            display: none;
-        }
-
-        .sucesso {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .erro {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .loading {
-            text-align: center;
-            color: #888;
-            font-size: 13px;
-            padding: 10px;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container">
-        <h1>📋 Registro de Venda</h1>
-
-        <div class="form-group">
-            <label>Produto *</label>
-            <select id="produto" onchange="preencherPreco()">
-                <option value="">Carregando produtos...</option>
-            </select>
-            <div class="preco-info" id="preco-info" style="display:none">
-                💰 Preço sugerido: <strong id="preco-sugerido"></strong>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="form-group">
-                <label>Quantidade *</label>
-                <input type="number" id="quantidade" min="1" placeholder="Ex: 2" oninput="calcularTotal()">
-            </div>
-            <div class="form-group">
-                <label>Preço Unitário (R$) *</label>
-                <input type="number" id="preco_unitario" step="0.01" placeholder="Ex: 39.99" oninput="calcularTotal()">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Valor Total</label>
-            <input type="text" id="valor_total" readonly style="background:#f8f9fa; color:#333; font-weight:bold;">
-        </div>
-
-        <div class="form-group">
-            <label>Cliente *</label>
-            <input type="text" id="cliente" placeholder="Nome do cliente">
-        </div>
-
-        <div class="row">
-            <div class="form-group">
-                <label>Status do Pagamento *</label>
-                <select id="status_pagamento">
-                    <option value="">Selecione</option>
-                    <option value="pago">Pago</option>
-                    <option value="devendo">Devendo</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Condição *</label>
-                <select id="condicao">
-                    <option value="">Selecione</option>
-                    <option value="normal">Normal</option>
-                    <option value="promoção">Promoção</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Data da Venda *</label>
-            <input type="date" id="data_venda">
-        </div>
-
-        <button id="btn-registrar" onclick="registrarVenda()">✅ Registrar Venda</button>
-        <div class="mensagem sucesso" id="msg-sucesso">✅ Venda registrada com sucesso!</div>
-        <div class="mensagem erro" id="msg-erro" id="msg-erro"></div>
-    </div>
-
-    <script>
-        const API = 'http://127.0.0.1:5000';
-        let produtos = [];
-
-        // Carrega produtos ao abrir a página
-        async function carregarProdutos() {
-            try {
-                const res = await fetch(`${API}/produtos`);
-                const data = await res.json();
-                produtos = data.produtos;
-                const select = document.getElementById('produto');
-                select.innerHTML = '<option value="">Selecione o produto</option>';
-                produtos.forEach(p => {
-                    select.innerHTML += `<option value="${p.id}" data-preco="${p.preco}" data-nome="${p.nome}">${p.nome}</option>`;
-                });
-            } catch (e) {
-                document.getElementById('produto').innerHTML = '<option value="">Erro ao carregar produtos</option>';
-            }
-        }
-
-        function preencherPreco() {
-            const select = document.getElementById('produto');
-            const option = select.options[select.selectedIndex];
-            const preco = option.getAttribute('data-preco');
-            if (preco) {
-                document.getElementById('preco_unitario').value = preco;
-                document.getElementById('preco-sugerido').textContent = `R$ ${parseFloat(preco).toFixed(2)}`;
-                document.getElementById('preco-info').style.display = 'block';
-                calcularTotal();
-            } else {
-                document.getElementById('preco-info').style.display = 'none';
-            }
-        }
-
-        function calcularTotal() {
-            const qtd = parseFloat(document.getElementById('quantidade').value) || 0;
-            const preco = parseFloat(document.getElementById('preco_unitario').value) || 0;
-            const total = qtd * preco;
-            document.getElementById('valor_total').value = total > 0 ? `R$ ${total.toFixed(2)}` : '';
-        }
-
-        async function registrarVenda() {
-            const select = document.getElementById('produto');
-            const option = select.options[select.selectedIndex];
-
-            const dados = {
-                id_produto: select.value,
-                produto: option.getAttribute('data-nome'),
-                quantidade: document.getElementById('quantidade').value,
-                preco_unitario: document.getElementById('preco_unitario').value,
-                cliente: document.getElementById('cliente').value,
-                status_pagamento: document.getElementById('status_pagamento').value,
-                condicao: document.getElementById('condicao').value,
-                data_venda: document.getElementById('data_venda').value
-            };
-
-            // Validação
-            if (!dados.id_produto || !dados.quantidade || !dados.preco_unitario || !dados.cliente || !dados.status_pagamento || !dados.condicao || !dados.data_venda) {
-                document.getElementById('msg-erro').textContent = '❌ Preencha todos os campos obrigatórios!';
-                document.getElementById('msg-erro').style.display = 'block';
-                document.getElementById('msg-sucesso').style.display = 'none';
-                return;
-            }
-
-            const btn = document.getElementById('btn-registrar');
-            btn.disabled = true;
-            btn.textContent = '⏳ Registrando...';
-
-            try {
-                const res = await fetch(`${API}/venda`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-                const data = await res.json();
-                if (data.sucesso) {
-                    document.getElementById('msg-sucesso').style.display = 'block';
-                    document.getElementById('msg-erro').style.display = 'none';
-                    // Limpa o formulário
-                    document.getElementById('quantidade').value = '';
-                    document.getElementById('preco_unitario').value = '';
-                    document.getElementById('valor_total').value = '';
-                    document.getElementById('cliente').value = '';
-                    document.getElementById('produto').value = '';
-                    document.getElementById('status_pagamento').value = '';
-                    document.getElementById('condicao').value = '';
-                    document.getElementById('preco-info').style.display = 'none';
-                } else {
-                    document.getElementById('msg-erro').textContent = '❌ ' + data.erro;
-                    document.getElementById('msg-erro').style.display = 'block';
-                    document.getElementById('msg-sucesso').style.display = 'none';
-                }
-            } catch (e) {
-                document.getElementById('msg-erro').textContent = '❌ Erro ao conectar com o servidor!';
-                document.getElementById('msg-erro').style.display = 'block';
-            }
-
-            btn.disabled = false;
-            btn.textContent = '✅ Registrar Venda';
-        }
-
-        // Inicializa
-        document.getElementById('data_venda').valueAsDate = new Date();
-        carregarProdutos();
-    </script>
-</body>
-
-</html> -->
-
-<!DOCTYPE html>
-<html lang="pt-BR">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulário de Vendas - Amanda</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            padding: 30px;
-        }
-
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 600px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
             margin-bottom: 5px;
             font-size: 22px;
         }
@@ -594,6 +297,433 @@
 
         document.getElementById('data_venda').valueAsDate = new Date();
         carregarProdutos();
+    </script>
+</body>
+
+</html> -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário de Vendas - Amanda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 22px;
+        }
+
+        .nav {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .nav a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .preco-info {
+            background: #f8f9fa;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .mensagem {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .sucesso {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .erro {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Autocomplete */
+        .autocomplete-lista {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .autocomplete-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .autocomplete-item:hover {
+            background: #f0f2f5;
+        }
+
+        .autocomplete-item .tipo {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .tipo-ouro {
+            background: #FFD700;
+            color: #333 !important;
+        }
+
+        .tipo-prata {
+            background: #9E9E9E;
+        }
+
+        .tipo-bronze {
+            background: #CD7F32;
+        }
+
+        .autocomplete-novo {
+            padding: 10px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #4CAF50;
+            border-top: 1px solid #eee;
+            font-style: italic;
+        }
+
+        .autocomplete-novo:hover {
+            background: #f0f2f5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📋 Registro de Venda</h1>
+        <div class="nav">
+            <a href="/menu">← Voltar para o Menu</a>
+        </div>
+
+        <div class="form-group">
+            <label>Produto *</label>
+            <select id="produto" onchange="preencherPreco()">
+                <option value="">Carregando produtos...</option>
+            </select>
+            <div class="preco-info" id="preco-info" style="display:none">
+                💰 Preço sugerido: <strong id="preco-sugerido"></strong>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Quantidade *</label>
+                <input type="number" id="quantidade" min="1" placeholder="Ex: 2" oninput="calcularTotal()">
+            </div>
+            <div class="form-group">
+                <label>Preço Unitário (R$) *</label>
+                <input type="number" id="preco_unitario" step="0.01" placeholder="Ex: 39.99" oninput="calcularTotal()">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Valor Total</label>
+            <input type="text" id="valor_total" readonly style="background:#f8f9fa; color:#333; font-weight:bold;">
+        </div>
+
+        <div class="form-group">
+            <label>Cliente *</label>
+            <input type="text" id="cliente" placeholder="Digite o nome do cliente..." autocomplete="off"
+                oninput="filtrarClientes()" onblur="fecharLista()">
+            <div class="autocomplete-lista" id="autocomplete-lista" style="display:none"></div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Status do Pagamento *</label>
+                <select id="status_pagamento">
+                    <option value="">Selecione</option>
+                    <option value="pago">Pago</option>
+                    <option value="devendo">Devendo</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Condição *</label>
+                <select id="condicao">
+                    <option value="">Selecione</option>
+                    <option value="normal">Normal</option>
+                    <option value="promoção">Promoção</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Data da Venda *</label>
+            <input type="date" id="data_venda">
+        </div>
+
+        <button id="btn-registrar" onclick="registrarVenda()">✅ Registrar Venda</button>
+        <div class="mensagem sucesso" id="msg-sucesso">✅ Venda registrada com sucesso!</div>
+        <div class="mensagem erro" id="msg-erro"></div>
+    </div>
+
+    <script>
+        const API = 'http://127.0.0.1:5000';
+        let produtos = [];
+        let clientes = [];
+
+        async function carregarProdutos() {
+            try {
+                const res = await fetch(`${API}/produtos`);
+                const data = await res.json();
+                produtos = data.produtos;
+                const select = document.getElementById('produto');
+                select.innerHTML = '<option value="">Selecione o produto</option>';
+                produtos.forEach(p => {
+                    select.innerHTML += `<option value="${p.id}" data-preco="${p.preco}" data-nome="${p.nome}">${p.nome}</option>`;
+                });
+            } catch (e) {
+                document.getElementById('produto').innerHTML = '<option value="">Erro ao carregar produtos</option>';
+            }
+        }
+
+        async function carregarClientes() {
+            try {
+                const res = await fetch(`${API}/api/clientes`);
+                const data = await res.json();
+                clientes = data.clientes;
+            } catch (e) {
+                clientes = [];
+            }
+        }
+
+        function filtrarClientes() {
+            const input = document.getElementById('cliente');
+            const lista = document.getElementById('autocomplete-lista');
+            const termo = input.value.toLowerCase().trim();
+
+            if (termo.length < 1) {
+                lista.style.display = 'none';
+                return;
+            }
+
+            const filtrados = clientes.filter(c => c.nome.toLowerCase().includes(termo));
+
+            lista.innerHTML = '';
+
+            filtrados.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                const tipoCor = c.tipo === 'OURO' ? 'tipo-ouro' : c.tipo === 'PRATA' ? 'tipo-prata' : 'tipo-bronze';
+                item.innerHTML = `
+          <span>${c.nome}</span>
+          <span class="tipo ${tipoCor}">${c.tipo || ''}</span>
+        `;
+                item.onmousedown = () => {
+                    input.value = c.nome;
+                    lista.style.display = 'none';
+                };
+                lista.appendChild(item);
+            });
+
+            // Opção para novo cliente
+            const novo = document.createElement('div');
+            novo.className = 'autocomplete-novo';
+            novo.innerHTML = `➕ Cadastrar "${input.value}" como novo cliente`;
+            novo.onmousedown = () => {
+                window.open('/clientes', '_blank');
+                lista.style.display = 'none';
+            };
+            lista.appendChild(novo);
+
+            lista.style.display = 'block';
+        }
+
+        function fecharLista() {
+            setTimeout(() => {
+                document.getElementById('autocomplete-lista').style.display = 'none';
+            }, 200);
+        }
+
+        function preencherPreco() {
+            const select = document.getElementById('produto');
+            const option = select.options[select.selectedIndex];
+            const preco = option.getAttribute('data-preco');
+            if (preco) {
+                document.getElementById('preco_unitario').value = preco;
+                document.getElementById('preco-sugerido').textContent = `R$ ${parseFloat(preco).toFixed(2)}`;
+                document.getElementById('preco-info').style.display = 'block';
+                calcularTotal();
+            } else {
+                document.getElementById('preco-info').style.display = 'none';
+            }
+        }
+
+        function calcularTotal() {
+            const qtd = parseFloat(document.getElementById('quantidade').value) || 0;
+            const preco = parseFloat(document.getElementById('preco_unitario').value) || 0;
+            const total = qtd * preco;
+            document.getElementById('valor_total').value = total > 0 ? `R$ ${total.toFixed(2)}` : '';
+        }
+
+        async function registrarVenda() {
+            const select = document.getElementById('produto');
+            const option = select.options[select.selectedIndex];
+
+            const dados = {
+                id_produto: select.value,
+                produto: option.getAttribute('data-nome'),
+                quantidade: document.getElementById('quantidade').value,
+                preco_unitario: document.getElementById('preco_unitario').value,
+                cliente: document.getElementById('cliente').value,
+                status_pagamento: document.getElementById('status_pagamento').value,
+                condicao: document.getElementById('condicao').value,
+                data_venda: document.getElementById('data_venda').value
+            };
+
+            if (!dados.id_produto || !dados.quantidade || !dados.preco_unitario || !dados.cliente || !dados.status_pagamento || !dados.condicao || !dados.data_venda) {
+                document.getElementById('msg-erro').textContent = '❌ Preencha todos os campos obrigatórios!';
+                document.getElementById('msg-erro').style.display = 'block';
+                document.getElementById('msg-sucesso').style.display = 'none';
+                return;
+            }
+
+            const btn = document.getElementById('btn-registrar');
+            btn.disabled = true;
+            btn.textContent = '⏳ Registrando...';
+
+            try {
+                const res = await fetch(`${API}/venda`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+                const data = await res.json();
+                if (data.sucesso) {
+                    document.getElementById('msg-sucesso').style.display = 'block';
+                    document.getElementById('msg-erro').style.display = 'none';
+                    document.getElementById('quantidade').value = '';
+                    document.getElementById('preco_unitario').value = '';
+                    document.getElementById('valor_total').value = '';
+                    document.getElementById('cliente').value = '';
+                    document.getElementById('produto').value = '';
+                    document.getElementById('status_pagamento').value = '';
+                    document.getElementById('condicao').value = '';
+                    document.getElementById('preco-info').style.display = 'none';
+                } else {
+                    document.getElementById('msg-erro').textContent = '❌ ' + data.erro;
+                    document.getElementById('msg-erro').style.display = 'block';
+                    document.getElementById('msg-sucesso').style.display = 'none';
+                }
+            } catch (e) {
+                document.getElementById('msg-erro').textContent = '❌ Erro ao conectar com o servidor!';
+                document.getElementById('msg-erro').style.display = 'block';
+            }
+
+            btn.disabled = false;
+            btn.textContent = '✅ Registrar Venda';
+        }
+
+        document.getElementById('data_venda').valueAsDate = new Date();
+        carregarProdutos();
+        carregarClientes();
     </script>
 </body>
 
