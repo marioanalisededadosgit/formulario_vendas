@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Produtos - Amanda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 22px;
+        }
+
+        .nav {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .nav a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #FF9800;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .lucro-info {
+            background: #f8f9fa;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #FF9800;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #e68900;
+        }
+
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .mensagem {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .sucesso {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .erro {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📦 Cadastro de Produto</h1>
+        <div class="nav">
+            <a href="/menu">← Voltar para o Menu</a>
+        </div>
+
+        <div class="form-group">
+            <label>Nome do Produto *</label>
+            <input type="text" id="produto" placeholder="Ex: Blusa feminina azul">
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Preço de Compra (R$) *</label>
+                <input type="number" id="preco_compra" step="0.01" placeholder="Ex: 10.00" oninput="calcularLucro()">
+            </div>
+            <div class="form-group">
+                <label>Preço de Venda (R$) *</label>
+                <input type="number" id="preco_venda" step="0.01" placeholder="Ex: 25.00" oninput="calcularLucro()">
+            </div>
+        </div>
+
+        <div class="lucro-info" id="lucro-info" style="display:none">
+            💰 Margem de lucro: <strong id="margem"></strong>
+        </div>
+
+        <div class="form-group" style="margin-top:15px">
+            <label>Quantidade Inicial no Estoque *</label>
+            <input type="number" id="quantidade" min="0" placeholder="Ex: 10">
+        </div>
+
+        <button id="btn-cadastrar" onclick="cadastrarProduto()">✅ Cadastrar Produto</button>
+        <div class="mensagem sucesso" id="msg-sucesso">✅ Produto cadastrado com sucesso!</div>
+        <div class="mensagem erro" id="msg-erro"></div>
+    </div>
+
+    <script>
+        const API = 'http://127.0.0.1:5000';
+
+        function calcularLucro() {
+            const compra = parseFloat(document.getElementById('preco_compra').value) || 0;
+            const venda = parseFloat(document.getElementById('preco_venda').value) || 0;
+            if (compra > 0 && venda > 0) {
+                const lucro = venda - compra;
+                const margem = ((lucro / compra) * 100).toFixed(1);
+                document.getElementById('margem').textContent = `R$ ${lucro.toFixed(2)} (${margem}%)`;
+                document.getElementById('lucro-info').style.display = 'block';
+            }
+        }
+
+        async function cadastrarProduto() {
+            const produto = document.getElementById('produto').value;
+            const preco_compra = document.getElementById('preco_compra').value;
+            const preco_venda = document.getElementById('preco_venda').value;
+            const quantidade = document.getElementById('quantidade').value;
+
+            if (!produto || !preco_compra || !preco_venda || !quantidade) {
+                document.getElementById('msg-erro').textContent = '❌ Preencha todos os campos!';
+                document.getElementById('msg-erro').style.display = 'block';
+                document.getElementById('msg-sucesso').style.display = 'none';
+                return;
+            }
+
+            const btn = document.getElementById('btn-cadastrar');
+            btn.disabled = true;
+            btn.textContent = '⏳ Cadastrando...';
+
+            try {
+                const res = await fetch(`${API}/produto`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ produto, preco_compra, preco_venda, quantidade })
+                });
+                const data = await res.json();
+                if (data.sucesso) {
+                    document.getElementById('msg-sucesso').style.display = 'block';
+                    document.getElementById('msg-erro').style.display = 'none';
+                    document.getElementById('produto').value = '';
+                    document.getElementById('preco_compra').value = '';
+                    document.getElementById('preco_venda').value = '';
+                    document.getElementById('quantidade').value = '';
+                    document.getElementById('lucro-info').style.display = 'none';
+                } else {
+                    document.getElementById('msg-erro').textContent = '❌ ' + data.erro;
+                    document.getElementById('msg-erro').style.display = 'block';
+                    document.getElementById('msg-sucesso').style.display = 'none';
+                }
+            } catch (e) {
+                document.getElementById('msg-erro').textContent = '❌ Erro ao conectar com o servidor!';
+                document.getElementById('msg-erro').style.display = 'block';
+            }
+
+            btn.disabled = false;
+            btn.textContent = '✅ Cadastrar Produto';
+        }
+    </script>
+</body>
+
+</html>

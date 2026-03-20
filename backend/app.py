@@ -29,12 +29,13 @@
 #             return i + 2
 #     return 2
 
-# def registrar_movimentacao_estoque(spreadsheet, produto, quantidade, tipo):
+# def registrar_movimentacao_estoque(spreadsheet, id_produto, produto, quantidade, tipo):
 #     sheet_estoque = spreadsheet.worksheet('ESTOQUE')
 #     coluna_id = sheet_estoque.col_values(1)
 #     proxima = len([x for x in coluna_id if x.strip() != '']) + 1
 #     data_atual = datetime.now().strftime('%Y-%m-%d')
 #     sheet_estoque.batch_update([
+#         {'range': f'A{proxima}', 'values': [[id_produto]]},
 #         {'range': f'B{proxima}', 'values': [[produto]]},
 #         {'range': f'C{proxima}', 'values': [[tipo]]},
 #         {'range': f'D{proxima}', 'values': [[quantidade]]},
@@ -101,8 +102,14 @@
 #             {'range': f'K{proxima}', 'values': [[dados['condicao']]]}
 #         ])
 
-#         # Registra saída no estoque automaticamente
-#         registrar_movimentacao_estoque(spreadsheet, dados['produto'], quantidade, 'SAIDA')
+#         # Registra saída no estoque automaticamente com id_produto
+#         registrar_movimentacao_estoque(
+#             spreadsheet,
+#             dados['id_produto'],
+#             dados['produto'],
+#             quantidade,
+#             'SAIDA'
+#         )
 
 #         return jsonify({'sucesso': True, 'mensagem': 'Venda registrada com sucesso!'})
 #     except Exception as e:
@@ -145,8 +152,13 @@
 
 #         quantidade = float(dados['quantidade'])
 
-#         # Registra entrada no estoque
-#         registrar_movimentacao_estoque(spreadsheet, dados['produto'], quantidade, 'ENTRADA')
+#         registrar_movimentacao_estoque(
+#             spreadsheet,
+#             dados['id_produto'],
+#             dados['produto'],
+#             quantidade,
+#             'ENTRADA'
+#         )
 
 #         return jsonify({'sucesso': True, 'mensagem': 'Entrada de estoque registrada com sucesso!'})
 #     except Exception as e:
@@ -185,7 +197,8 @@
 
 # if __name__ == '__main__':
 #     app.run(debug=True, port=5000)
-# ----------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import gspread
@@ -247,7 +260,15 @@ def vendas():
 def clientes():
     return app.send_static_file('clientes.html')
 
-# Rota para buscar produtos
+@app.route('/cadastro-produto')
+def produtos_page():
+    return app.send_static_file('produtos.html')
+
+@app.route('/cadastro-estoque')
+def estoque_page():
+    return app.send_static_file('estoque.html')
+
+# Rota API para buscar produtos
 @app.route('/produtos', methods=['GET'])
 def get_produtos():
     try:
@@ -279,7 +300,6 @@ def registrar_venda():
 
         proxima = proxima_linha_vazia(sheet_vendas)
 
-        # Registra a venda
         sheet_vendas.batch_update([
             {'range': f'C{proxima}', 'values': [[dados['produto']]]},
             {'range': f'D{proxima}', 'values': [[quantidade]]},
@@ -290,7 +310,6 @@ def registrar_venda():
             {'range': f'K{proxima}', 'values': [[dados['condicao']]]}
         ])
 
-        # Registra saída no estoque automaticamente com id_produto
         registrar_movimentacao_estoque(
             spreadsheet,
             dados['id_produto'],
@@ -328,6 +347,40 @@ def cadastrar_cliente():
         ])
 
         return jsonify({'sucesso': True, 'mensagem': 'Cliente cadastrado com sucesso!'})
+    except Exception as e:
+        return jsonify({'sucesso': False, 'erro': str(e)}), 500
+
+# Rota para cadastrar produto
+@app.route('/produto', methods=['POST'])
+def cadastrar_produto():
+    try:
+        dados = request.json
+        spreadsheet = conectar_sheets()
+        sheet_produto = spreadsheet.worksheet('PRODUTO')
+
+        coluna_nome = sheet_produto.col_values(2)
+        proxima = len([x for x in coluna_nome if x.strip() != '']) + 1
+
+        sheet_produto.batch_update([
+            {'range': f'B{proxima}', 'values': [[dados['produto']]]},
+            {'range': f'C{proxima}', 'values': [[dados['preco_compra']]]},
+            {'range': f'D{proxima}', 'values': [[dados['preco_venda']]]}
+        ])
+
+        import time
+        time.sleep(1)
+        id_produto = sheet_produto.cell(proxima, 1).value
+
+        if float(dados.get('quantidade_inicial', 0)) > 0:
+            registrar_movimentacao_estoque(
+                spreadsheet,
+                id_produto,
+                dados['produto'],
+                float(dados['quantidade_inicial']),
+                'ENTRADA'
+            )
+
+        return jsonify({'sucesso': True, 'mensagem': 'Produto cadastrado com sucesso!'})
     except Exception as e:
         return jsonify({'sucesso': False, 'erro': str(e)}), 500
 

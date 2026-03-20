@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrada de Estoque - Amanda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 22px;
+        }
+
+        .nav {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .nav a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #9C27B0;
+        }
+
+        .estoque-info {
+            background: #f8f9fa;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #9C27B0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #7b1fa2;
+        }
+
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .mensagem {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .sucesso {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .erro {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📥 Entrada de Estoque</h1>
+        <div class="nav">
+            <a href="/menu">← Voltar para o Menu</a>
+        </div>
+
+        <div class="form-group">
+            <label>Produto *</label>
+            <select id="produto" onchange="mostrarEstoque()">
+                <option value="">Carregando produtos...</option>
+            </select>
+            <div class="estoque-info" id="estoque-info" style="display:none">
+                📦 Estoque atual: <strong id="estoque-atual"></strong> unidades
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Quantidade que Entrou *</label>
+            <input type="number" id="quantidade" min="1" placeholder="Ex: 10">
+        </div>
+
+        <div class="form-group">
+            <label>Data de Entrada *</label>
+            <input type="date" id="data_entrada">
+        </div>
+
+        <button id="btn-entrada" onclick="registrarEntrada()">✅ Registrar Entrada</button>
+        <div class="mensagem sucesso" id="msg-sucesso">✅ Entrada registrada com sucesso!</div>
+        <div class="mensagem erro" id="msg-erro"></div>
+    </div>
+
+    <script>
+        const API = 'http://127.0.0.1:5000';
+        let produtos = [];
+        let estoqueAtual = {};
+
+        async function carregarDados() {
+            try {
+                const [resProdutos, resEstoque] = await Promise.all([
+                    fetch(`${API}/produtos`),
+                    fetch(`${API}/estoque`)
+                ]);
+                const dataProdutos = await resProdutos.json();
+                const dataEstoque = await resEstoque.json();
+
+                produtos = dataProdutos.produtos;
+
+                dataEstoque.estoque.forEach(e => {
+                    estoqueAtual[e.produto] = e.saldo;
+                });
+
+                const select = document.getElementById('produto');
+                select.innerHTML = '<option value="">Selecione o produto</option>';
+                produtos.forEach(p => {
+                    select.innerHTML += `<option value="${p.id}" data-nome="${p.nome}">${p.nome}</option>`;
+                });
+            } catch (e) {
+                document.getElementById('produto').innerHTML = '<option value="">Erro ao carregar produtos</option>';
+            }
+        }
+
+        function mostrarEstoque() {
+            const select = document.getElementById('produto');
+            const option = select.options[select.selectedIndex];
+            const nome = option.getAttribute('data-nome');
+            if (nome) {
+                const saldo = estoqueAtual[nome] || 0;
+                document.getElementById('estoque-atual').textContent = saldo;
+                document.getElementById('estoque-info').style.display = 'block';
+            } else {
+                document.getElementById('estoque-info').style.display = 'none';
+            }
+        }
+
+        async function registrarEntrada() {
+            const select = document.getElementById('produto');
+            const option = select.options[select.selectedIndex];
+            const id_produto = select.value;
+            const produto = option.getAttribute('data-nome');
+            const quantidade = document.getElementById('quantidade').value;
+            const data_entrada = document.getElementById('data_entrada').value;
+
+            if (!id_produto || !quantidade || !data_entrada) {
+                document.getElementById('msg-erro').textContent = '❌ Preencha todos os campos!';
+                document.getElementById('msg-erro').style.display = 'block';
+                document.getElementById('msg-sucesso').style.display = 'none';
+                return;
+            }
+
+            const btn = document.getElementById('btn-entrada');
+            btn.disabled = true;
+            btn.textContent = '⏳ Registrando...';
+
+            try {
+                const res = await fetch(`${API}/estoque/entrada`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_produto, produto, quantidade, data_entrada })
+                });
+                const data = await res.json();
+                if (data.sucesso) {
+                    document.getElementById('msg-sucesso').style.display = 'block';
+                    document.getElementById('msg-erro').style.display = 'none';
+                    document.getElementById('quantidade').value = '';
+                    document.getElementById('produto').value = '';
+                    document.getElementById('estoque-info').style.display = 'none';
+                    carregarDados();
+                } else {
+                    document.getElementById('msg-erro').textContent = '❌ ' + data.erro;
+                    document.getElementById('msg-erro').style.display = 'block';
+                    document.getElementById('msg-sucesso').style.display = 'none';
+                }
+            } catch (e) {
+                document.getElementById('msg-erro').textContent = '❌ Erro ao conectar com o servidor!';
+                document.getElementById('msg-erro').style.display = 'block';
+            }
+
+            btn.disabled = false;
+            btn.textContent = '✅ Registrar Entrada';
+        }
+
+        document.getElementById('data_entrada').valueAsDate = new Date();
+        carregarDados();
+    </script>
+</body>
+
+</html>

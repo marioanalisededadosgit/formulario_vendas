@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -111,6 +111,144 @@
             <div class="icone">👤</div>
             <h2>Cadastrar Cliente</h2>
             <p>Adicione um novo cliente ao sistema</p>
+        </a>
+    </div>
+
+    <div class="footer">Sistema de Vendas da Amanda © 2026</div>
+</body>
+
+</html> -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Vendas - Amanda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .header p {
+            color: #888;
+            margin-top: 8px;
+            font-size: 15px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .card .icone {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .card p {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .card.vendas {
+            border-top: 4px solid #4CAF50;
+        }
+
+        .card.clientes {
+            border-top: 4px solid #2196F3;
+        }
+
+        .card.produtos {
+            border-top: 4px solid #FF9800;
+        }
+
+        .card.estoque {
+            border-top: 4px solid #9C27B0;
+        }
+
+        .footer {
+            margin-top: 40px;
+            color: #aaa;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🛍️ Sistema de Vendas</h1>
+        <p>Bem-vinda, Amanda! O que deseja fazer hoje?</p>
+    </div>
+
+    <div class="cards">
+        <a href="/vendas" class="card vendas">
+            <div class="icone">📋</div>
+            <h2>Registrar Venda</h2>
+            <p>Registre uma nova venda na planilha</p>
+        </a>
+        <a href="/clientes" class="card clientes">
+            <div class="icone">👤</div>
+            <h2>Cadastrar Cliente</h2>
+            <p>Adicione um novo cliente ao sistema</p>
+        </a>
+        <a href="/cadastro-produto" class="card produtos">
+            <div class="icone">📦</div>
+            <h2>Cadastrar Produto</h2>
+            <p>Adicione um novo produto ao catálogo</p>
+        </a>
+        <a href="/cadastro-estoque" class="card estoque">
+            <div class="icone">🏭</div>
+            <h2>Entrada de Estoque</h2>
+            <p>Registre a compra de novas mercadorias</p>
         </a>
     </div>
 
